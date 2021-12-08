@@ -11,22 +11,15 @@ import SwiftUI
 struct AddNewHabitView: View {
     @Environment(\.presentationMode) var presentationMode
     
-    @ObservedObject var habits: Habits
+    @StateObject var habits = Habits()
+    @StateObject var icon = Icon()
     
-    //ATTEMPTS TO CONNECT DATA WITH STRUCT
-//    let icon: HabitItem.Icon
-//    @ObservedObject var icon: Icon
-    
-    
-    let iconColors = ["green", "mint", "blue", "heaven", "lemon", "pink", "orange", "peach", ]
-
-    
+    //    let habit: HabitItem
+    //    let habits: Habits
     
     @State private var name = ""
     @State private var actionPlan = ""
     @State private var amountPerDay = 1
-    @State private var iconColor = "green"
-    @State private var iconName = ""
     @State private var showIconView = false
     
     let columns = [
@@ -36,15 +29,13 @@ struct AddNewHabitView: View {
     
     var body: some View {
         NavigationView{
-            
             VStack {
                 Form {
-                    
                     Section(header: Text("Create your own habit")){
                         HStack {
-                            Image(systemName: "book")
+                            Image(systemName: icon.name)
                                 .font(.system(size: 30))
-                                .foregroundColor(Color(iconColor))
+                                .foregroundColor(Color(icon.color))
                                 .padding(5)
                                 .onTapGesture{
                                     showIconView = true
@@ -63,18 +54,19 @@ struct AddNewHabitView: View {
                     
                     Section(header: Text("Select habit color")) {
                         LazyVGrid(columns: columns, spacing: 10){
-                            ForEach(iconColors, id: \.self) { icon in
+                            ForEach(icon.colors, id: \.self) { color in
                                 ZStack{
                                     Circle()
-                                        .fill(Color(icon))
+                                        .fill(Color(color))
                                         .frame(width: 30, height: 30)
                                         .onTapGesture {
-                                            iconColor = icon
+                                            icon.color = color
+                                            
                                         }
                                         .padding(5)
-                                    if iconColor == icon {
+                                    if icon.color == color {
                                         Circle()
-                                            .stroke(Color(icon), lineWidth: 2)
+                                            .stroke(Color(color), lineWidth: 2)
                                             .frame(width: 37, height: 35)
                                     }
                                 }
@@ -86,30 +78,26 @@ struct AddNewHabitView: View {
                     Section(header: Text("Or use suggested habits")){
                         
                     }
-              
-                        
                 }
                 
                 .navigationBarTitle("Add new habit")
                 .navigationBarItems(
                     
                     trailing: Button(action: {
-                        let habit = HabitItem(name: self.name, actionPlan: self.actionPlan, amountPerDay: self.amountPerDay, iconColor: self.iconColor)
-                    
-                    self.habits.items.append(habit)
-                    self.presentationMode.wrappedValue.dismiss()
-                    
-                }){
-                    
-                    HStack {
-                        Text("Save")
-                        Image(systemName: "plus.circle")
-                    }
-                  
-                })
+                        let habit = HabitItem(name: self.name, actionPlan: self.actionPlan, amountPerDay: self.amountPerDay, iconColor: icon.color, iconName: icon.name)
+                        
+                        self.habits.items.append(habit)
+                        self.presentationMode.wrappedValue.dismiss()
+                        
+                    }){
+                        
+                        HStack {
+                            Text("Save")
+                            Image(systemName: "plus.circle")
+                        }
+                    })
                 .sheet(isPresented: $showIconView ){
-//                    IconView(icon: Icon(name: icon.name))
-                    IconView()
+                    IconView(icon: icon)
                 }
             }
         }
@@ -118,7 +106,8 @@ struct AddNewHabitView: View {
 
 
 struct AddNewHabitView_Previews: PreviewProvider {
+    
     static var previews: some View {
-        AddNewHabitView(habits: Habits())
+        AddNewHabitView(habits: Habits(), icon: Icon())
     }
 }

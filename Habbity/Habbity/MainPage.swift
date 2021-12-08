@@ -7,67 +7,13 @@
 
 import SwiftUI
 
-struct HabitItem: Codable, Identifiable, Equatable {
-    var id = UUID()
-    let name: String
-    let actionPlan: String
-    var dailyCounter = 0
-    let amountPerDay: Int
-    let iconColor: String
-    
-    static let example = HabitItem( name: "example", actionPlan: "your goal", dailyCounter: 0, amountPerDay: 1, iconColor: "book")
-    
-    //UNAVAILABLE UNTIL ADDIND FUNCTIONALITY TO ICONVIEW
-//    let iconName: String
-    
-    
-}
-    //ATTEMPTS TO CONNECT DATA WITH STRUCT
-
-//class Icon: ObservableObject {
-//
-//    @Published var name: String
-//
-//
-//    init(name: String) {
-//        self.name = name
-//    }
-//}
-
-
-class Habits: ObservableObject {
-    
-    @Published var items = [HabitItem]() {
-        didSet {
-            let encoder = JSONEncoder()
-            
-            if let encode = try? encoder.encode(items) {
-                UserDefaults.standard.set(encode, forKey: "Items")
-            }
-        }
-    }
-    
-    init() {
-        if let items = UserDefaults.standard.data(forKey: "Items"){
-            let decoder = JSONDecoder()
-            
-            if let decoded = try? decoder.decode([HabitItem].self, from: items){
-                self.items = decoded
-                return
-            }
-        }
-        self.items = []
-    }
-    
-}
-
 struct MainPage: View {
     
     @State private var showAddHabitView = false
     
-    
     @ObservedObject var habits: Habits
-    var activity: HabitItem
+    
+    //    var habit: HabitItem
     
     var body: some View {
         NavigationView {
@@ -90,49 +36,66 @@ struct MainPage: View {
                             HStack {
                                 Text("Daily goal:")
                                     .font(.subheadline)
-                                Text("\(activity.dailyCounter) / \(item.amountPerDay)")
+                                Text("\(item.dailyCounter) / \(item.amountPerDay)")
                                     .font(.subheadline)
+                                NavigationLink("Look") {
+                                    HabitView(habits: habits, habit: item)
+                                }
+                                
                             }
                             
                         }
                         Spacer()
-                      
-                            Button(action: {
-                                //DAILY HABIT COUNTER
-                                
-                            }) {
-                                Image(systemName: "checkmark.circle")
+                        
+                        Button(action: {
+                            //                                var counter = habits.items[item]
+                            //                                counter.daily += 1
+                            
+                            //DAILY HABIT COUNTER
+                            var updatedHabit = item
+                            updatedHabit.dailyCounter += 1
+                            
+                            if let index = habits.items.firstIndex(of: item){
+                                habits.items[index] = updatedHabit
                             }
-                            .buttonStyle(PlainButtonStyle())
-                            .foregroundColor(Color.blue)
-                            .font(.system(size: 30))
-                            .padding(.trailing, 30)
+                        }) {
+                            Image(systemName: "checkmark.circle")
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .foregroundColor(Color.blue)
+                        .font(.system(size: 30))
+                        .padding(.trailing, 30)
                         
                     }
                 }
+                .onDelete(perform: removeItems)
             }
-                
-                    .navigationBarTitle("My habits")
-                    .navigationBarItems(trailing:
-                        Button(action:{
-                            showAddHabitView = true
-                        }) {
-                            VStack{
-                                Image(systemName: "plus.circle")
-                                    
-                                Text("Add new habit")
-                            }
-                    })
-                    .sheet(isPresented: $showAddHabitView) {
-                        AddNewHabitView(habits: self.habits)
-                    }
+            
+            .navigationBarTitle("My habits")
+            .navigationBarItems(trailing:
+                                    Button(action:{
+                showAddHabitView = true
+            }) {
+                VStack{
+                    Image(systemName: "plus.circle")
+                    
+                    Text("Add new habit")
+                }
+            })
+            .sheet(isPresented: $showAddHabitView) {
+                AddNewHabitView(habits: habits, icon: Icon())
+            }
             
         }
+    }
+    
+    func removeItems(at offsets: IndexSet) {
+        habits.items.remove(atOffsets: offsets)
     }
 }
 
 struct MainPage_Previews: PreviewProvider {
     static var previews: some View {
-        MainPage(habits: Habits(), activity: HabitItem.example)
+        MainPage(habits: Habits())
     }
 }

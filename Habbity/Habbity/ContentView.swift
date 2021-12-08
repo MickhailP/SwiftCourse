@@ -7,14 +7,11 @@
 
 import SwiftUI
 
-
-
-
 struct ContentView: View {
     
     var body: some View {
         TabView{
-            MainPage(habits: Habits(), activity: HabitItem.example)
+            MainPage(habits: Habits())
                 .tabItem {
                     Label("Habits", systemImage: "square.text.square")
                 }
